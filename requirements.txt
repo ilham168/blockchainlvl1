@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+requests
+cryptography  # For ECDSA
+pydantic
+pytest
+ecdsa

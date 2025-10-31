@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Koin Saya - Ledger Blockchain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-primary: #fdfaf3;
+      --bg-secondary: #ffffff;
+      --text-primary: #2e2e2e;
+      --accent-color: #b8860b;
+      --border-color: #dcd7c9;
+      --success-color: #3a7d44;
+      --danger-color: #a93226;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: "Georgia", serif;
+      line-height: 1.6;
+    }
+
+    .header-title {
+      color: var(--accent-color);
+      font-size: 2.2rem;
+      letter-spacing: 0.5px;
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-primary {
+      background-color: var(--success-color);
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #4ba75d;
+    }
+
+    .btn-secondary {
+      background-color: var(--accent-color);
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: #cda434;
+    }
+
+    .input-style {
+      background-color: #fafafa;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.5rem;
+      width: 100%;
+    }
+
+    .block-header {
+      background: linear-gradient(90deg, #fff8dc, #f5deb3);
+      color: #4b3621;
+      border-bottom: 2px solid var(--accent-color);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .block-card {
+      border-left: 5px solid var(--accent-color);
+    }
+
+    ::selection {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* Responsif tambahan */
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 1.8rem;
+      }
+
+      .card {
+        padding: 1rem !important;
+      }
+
+      .grid {
+        gap: 1.25rem !important;
+      }
+
+      body {
+        padding: 0.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-title {
+        font-size: 1.6rem;
+      }
+
+      button {
+        font-size: 0.9rem;
+      }
+
+      textarea,
+      input {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen p-4 sm:p-6 md:p-10 transition-all">
+  <div class="container mx-auto">
+    <header class="mb-10 text-center">
+      <h1 class="header-title font-bold">⚜️ Koin Saya - Ledger Blockchain</h1>
+      <p class="mt-2 text-md text-gray-600">
+        Node Address:
+        <span id="node-address" class="font-mono text-gray-500">Loading...</span>
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Panel Kiri -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Kontrol -->
+        <div class="card p-6">
+          <h2 class="text-xl font-semibold mb-4 border-b border-gray-300 pb-2 text-gray-700">
+            ⛏️ Kontrol Operasi
+          </h2>
+          <div id="mempool-status" class="mb-4 text-sm text-yellow-700">
+            Mempool: 0 transactions waiting.
+          </div>
+          <button id="mine-btn" class="btn-primary w-full py-2 rounded-md disabled:opacity-50" onclick="mineBlock()">
+            Mine Block Now
+          </button>
+          <button id="resolve-btn" class="btn-secondary w-full py-2 rounded-md mt-3" onclick="resolveConflicts()">
+            Resolve Chain Conflict
+          </button>
+                  <!-- Dummy Mode Toggle -->
+        <div class="mt-4 text-center">
+          <label class="flex items-center justify-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="dummy-mode-toggle" checked class="w-4 h-4 accent-amber-600">
+            <span class="text-sm text-gray-700">Enable Dummy Mode</span>
+          </label>
+        </div>
+        </div>
+
+        <!-- Transaksi -->
+        <div class="card p-6">
+          <h2 class="text-xl font-semibold mb-4 border-b border-gray-300 pb-2 text-gray-700">
+            💸 Transaksi Baru
+          </h2>
+          <form id="tx-form" class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">Sender (Public Key HEX):</label>
+              <textarea id="sender-pk" rows="3" class="input-style font-mono text-xs"></textarea>
+              <p class="text-xs text-red-500 mt-1">Gunakan Public Key dari wallet Anda.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Recipient Public Key:</label>
+              <textarea id="recipient-pk" rows="3" class="input-style font-mono text-xs"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Amount:</label>
+              <input type="number" id="amount" step="0.01" value="10.0" class="input-style" />
+            </div>
+            <button type="submit" class="btn-primary w-full py-2 rounded-md">
+              Submit Transaction
+            </button>
+          </form>
+        </div>
+
+        <!-- Cek Saldo -->
+        <div class="card p-6">
+          <h2 class="text-xl font-semibold mb-4 border-b border-gray-300 pb-2 text-gray-700">
+            💰 Cek Saldo
+          </h2>
+          <label class="block text-sm font-medium mb-1">Public Key:</label>
+          <textarea id="balance-pubkey" rows="3" class="input-style font-mono text-xs"></textarea>
+          <button id="check-balance" class="btn-secondary w-full py-2 rounded-md mt-3">
+            Cek Saldo
+          </button>
+          <div id="balance-result" class="mt-3 text-sm text-gray-700"></div>
+        </div>
+
+        <!-- Node -->
+        <div class="card p-6">
+          <h2 class="text-xl font-semibold mb-4 border-b border-gray-300 pb-2 text-gray-700">
+            🔗 Node Terhubung
+          </h2>
+          <ul id="peers-list" class="space-y-2 text-sm">
+            <li class="text-gray-500">Loading peers...</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Panel Kanan -->
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold mb-6 text-gray-700 border-b border-gray-300 pb-2">
+          ⛓️ Ledger Blockchain
+        </h2>
+        <div id="blockchain-container" class="space-y-8">
+          <p class="text-gray-500 text-center py-10">Loading blockchain data...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Script Blockchain Dashboard ===== -->
+  <script>
+    const NODE_API_URL = "http://localhost:8001";
+    document.getElementById("node-address").textContent = NODE_API_URL;
+
+    async function sha256(str) {
+      const msgBuffer = new TextEncoder().encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    async function fetchBlockchain() {
+      try {
+        const res = await fetch(`${NODE_API_URL}/blocks`);
+        const data = await res.json();
+        renderBlockchain(data.chain.reverse());
+      } catch {
+        document.getElementById(
+          "blockchain-container"
+        ).innerHTML = `<p class="text-red-600 text-center">⚠️ Tidak dapat terhubung ke node.</p>`;
+      }
+    }
+
+    async function fetchMempool() {
+      try {
+        const res = await fetch(`${NODE_API_URL}/mempool`);
+        const data = await res.json();
+        const el = document.getElementById("mempool-status");
+        el.textContent = `Mempool: ${data.count} transactions waiting.`;
+        el.className = data.count > 0 ? "mb-4 text-sm text-yellow-700" : "mb-4 text-sm text-green-700";
+        document.getElementById("mine-btn").disabled = data.count === 0;
+      } catch {}
+    }
+
+    async function fetchPeers() {
+      const res = await fetch(`${NODE_API_URL}/nodes`);
+      const data = await res.json();
+      const list = document.getElementById("peers-list");
+      list.innerHTML = "";
+      if (!data.nodes.length) {
+        list.innerHTML = "<li class='text-gray-500'>No peers registered.</li>";
+        return;
+      }
+      data.nodes.forEach((peer) => (list.innerHTML += `<li>🔗 ${peer}</li>`));
+    }
+
+    function renderBlockchain(chain) {
+      const container = document.getElementById("blockchain-container");
+      container.innerHTML = "";
+      chain.forEach((block) => {
+        const txs = block.transactions
+          .map(
+            (tx) => `
+          <div class="text-xs border-t border-gray-200 pt-1 mt-1">
+            <span class="text-amber-700">${tx.amount}</span> → 
+            <span class="font-mono text-gray-700">${tx.recipient.substring(28, 40)}...</span>
+            <p class="font-mono text-gray-500 truncate mt-0.5">ID: ${tx.id.substring(0, 10)}...</p>
+          </div>`
+          )
+          .join("");
+
+        container.innerHTML += `
+          <div class="block-card card p-5">
+            <div class="block-header p-3 mb-4 flex justify-between items-center">
+              <span class="text-lg font-bold">BLOCK #${block.index}</span>
+              <span class="text-xs font-mono text-gray-700">Nonce: ${block.nonce}</span>
+            </div>
+            <div class="space-y-2 text-sm">
+              <p><span class="font-semibold">Hash:</span> <span class="text-green-700">${block.hash}</span></p>
+              <p class="text-xs"><span class="font-semibold">Prev:</span> ${block.previous_hash}</p>
+              <p class="text-xs text-gray-500">⏰ ${new Date(block.timestamp * 1000).toLocaleString()}</p>
+              <p class="text-xs text-red-700">Difficulty: ${block.difficulty}</p>
+              <div class="mt-2">${txs}</div>
+            </div>
+          </div>`;
+      });
+    }
+
+    async function mineBlock() {
+      const btn = document.getElementById("mine-btn");
+      btn.textContent = "Mining..."; btn.disabled = true;
+      try {
+       const res = await fetch(`${NODE_API_URL}/mine?dummy=${DUMMY_MODE}`, { method: "POST" });
+
+        const data = await res.json();
+        alert(res.ok ? `🎉 ${data.message}` : `❌ ${data.detail || data.message}`);
+      } catch {
+        alert("Error mining block.");
+      } finally {
+        btn.textContent = "Mine Block Now"; btn.disabled = false;
+        fetchBlockchain(); fetchMempool();
+      }
+    }
+
+    async function resolveConflicts() {
+      const res = await fetch(`${NODE_API_URL}/nodes/resolve`, { method: "POST" });
+      const data = await res.json();
+      alert(res.ok ? `✅ ${data.message}` : `❌ ${data.detail}`);
+      fetchBlockchain();
+    }
+
+    document.getElementById("tx-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const senderPk = document.getElementById("sender-pk").value.trim();
+      const recipientPk = document.getElementById("recipient-pk").value.trim();
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!senderPk || !recipientPk || isNaN(amount))
+        return alert("Isi semua field terlebih dahulu.");
+
+      alert("⚠️ Transaksi dummy, gunakan script Python untuk validasi sebenarnya.");
+      const tx = {
+        sender: senderPk,
+        recipient: recipientPk,
+        amount,
+        timestamp: Date.now() / 1000,
+        id: await sha256(senderPk + recipientPk + amount),
+        signature: "SimulatedSignaturePlaceholder",
+      };
+
+      const res = await fetch(`${NODE_API_URL}/transactions/new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tx),
+      });
+      const data = await res.json();
+      alert(res.ok ? `✅ ${data.message}` : `❌ ${data.detail}`);
+      fetchMempool();
+    });
+
+    document.getElementById("check-balance").addEventListener("click", async () => {
+      const key = document.getElementById("balance-pubkey").value.trim();
+      const out = document.getElementById("balance-result");
+      if (!key) return (out.textContent = "⚠️ Masukkan public key terlebih dahulu.");
+      try {
+        const res = await fetch(`${NODE_API_URL}/balance/${key}`);
+        const data = await res.json();
+        out.textContent = `Saldo: ${data.balance.toFixed(4)} koin`;
+      } catch {
+        out.textContent = "❌ Gagal memeriksa saldo.";
+      }
+    });
+
+    function init() {
+      fetchBlockchain();
+      fetchMempool();
+      fetchPeers();
+      setInterval(fetchBlockchain, 5000);
+      setInterval(fetchMempool, 2000);
+      setInterval(fetchPeers, 10000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
